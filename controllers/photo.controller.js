@@ -2,14 +2,14 @@ const photoService = require('../services/photo.service');
 
 exports.createPhoto = async (req, res) => {
     try {
-        const {title, altText, is_featured} = req.body;
+        const { title, altText, is_featured } = req.body;
         const image = req.file ? req.file.filename : null;
 
-        const photo = await photoService.createPhoto({title, image, altText, is_featured});
+        const photo = await photoService.createPhoto({ title, image, altText, is_featured });
 
-        res.status(201).json({status: true, message: 'Photo created', data: photo});
+        res.status(201).json({ status: true, message: 'Photo created', data: photo });
     } catch (err) {
-        res.status(500).json({status: false, message: err.message});
+        res.status(500).json({ status: false, message: err.message });
     }
 };
 
@@ -34,27 +34,37 @@ exports.addMultiplePhotos = async (req, res) => {
 
 exports.getAllPhotos = async (req, res) => {
     try {
-        const photos = await photoService.getAllPhotos();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
 
-        const updatedPhotos = photos.map(photo => {
-            return {
-                ...photo.toObject(), // convert Mongoose doc to plain object
-                image: photo.image ? `${req.protocol}://${req.get('host')}/uploads/photos/${photo.image.replace(/\\/g, '/')}` : null,
-            };
+        const { photos, total } = await photoService.getAllPhotos(page, limit);
+
+        const updatedPhotos = photos.map(photo => ({
+            ...photo.toObject(),
+            image: photo.image
+                ? `${req.protocol}://${req.get('host')}/uploads/photos/${photo.image.replace(/\\/g, '/')}`
+                : null,
+        }));
+
+        res.status(200).json({
+            status: true,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalPhotos: total,
+            data: updatedPhotos
         });
-
-        res.status(200).json({status: true, data: updatedPhotos});
     } catch (err) {
-        res.status(500).json({status: false, message: err.message});
+        res.status(500).json({ status: false, message: err.message });
     }
 };
+
 //TODO: what was the problem?
 
 exports.getPhotoById = async (req, res) => {
     try {
         const photo = await photoService.getPhotoById(req.params.id);
         if (!photo) {
-            return res.status(404).json({status: false, message: 'Photo not found'});
+            return res.status(404).json({ status: false, message: 'Photo not found' });
         }
 
         // Convert to plain object and add full image URL if image exists
@@ -63,24 +73,24 @@ exports.getPhotoById = async (req, res) => {
             photoObj.image = `${req.protocol}://${req.get('host')}/uploads/photos/${photoObj.image}`;
         }
 
-        res.status(200).json({status: true, data: photoObj});
+        res.status(200).json({ status: true, data: photoObj });
     } catch (err) {
-        res.status(500).json({status: false, message: err.message});
+        res.status(500).json({ status: false, message: err.message });
     }
 };
 
 
 exports.updatePhoto = async (req, res) => {
     try {
-        const {title, altText, is_featured, status} = req.body;
+        const { title, altText, is_featured, status } = req.body;
         const image = req.file ? req.file.filename : undefined;
 
-        const updateData = {title, altText, is_featured, status};
+        const updateData = { title, altText, is_featured, status };
         if (image) updateData.image = image;
 
         const updated = await photoService.updatePhoto(req.params.id, updateData);
         if (!updated) {
-            return res.status(404).json({status: false, message: 'Photo not found'});
+            return res.status(404).json({ status: false, message: 'Photo not found' });
         }
 
         // Add full URL to image if it exists
@@ -93,7 +103,7 @@ exports.updatePhoto = async (req, res) => {
             status: true, message: 'Photo updated', data: updatedObj,
         });
     } catch (err) {
-        res.status(500).json({status: false, message: err.message});
+        res.status(500).json({ status: false, message: err.message });
     }
 };
 
@@ -101,10 +111,10 @@ exports.updatePhoto = async (req, res) => {
 exports.deletePhoto = async (req, res) => {
     try {
         const deleted = await photoService.deletePhoto(req.params.id);
-        if (!deleted) return res.status(404).json({status: false, message: 'Photo not found'});
+        if (!deleted) return res.status(404).json({ status: false, message: 'Photo not found' });
 
-        res.status(200).json({status: true, message: 'Photo deleted'});
+        res.status(200).json({ status: true, message: 'Photo deleted' });
     } catch (err) {
-        res.status(500).json({status: false, message: err.message});
+        res.status(500).json({ status: false, message: err.message });
     }
 };

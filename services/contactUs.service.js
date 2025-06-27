@@ -13,13 +13,23 @@ const createContactUs = async (data) => {
 };
 
 // Get all contact us messages
-const getAllContactUs = async () => {
+const getAllContactUs = async (page = 1, limit = 10) => {
     try {
-        return await ContactUs.find().sort({ createdAt: -1 }); // Sort by most recent
+        const skip = (page - 1) * limit;
+
+        const contactMessages = await ContactUs.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await ContactUs.countDocuments();
+
+        return { contactMessages, total };
     } catch (err) {
         throw new Error(`Error fetching contact messages: ${err.message}`);
     }
 };
+
 
 // Get a contact us message by ID
 const getContactUsById = async (id) => {
@@ -79,7 +89,7 @@ const countTodayRequests = async () => {
     return ContactUs.countDocuments({ createdAt: { $gte: today } });
 };
 const countAllRequests = async () => ContactUs.countDocuments();
-const getLatestRequests = async (limit = 10) =>
+const getLatestRequests = async (limit = 7) =>
     ContactUs.find().sort({ createdAt: -1 }).limit(limit);
 
 module.exports = {

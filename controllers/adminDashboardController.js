@@ -26,7 +26,7 @@ exports.getDashboardData = async (req, res) => {
             contactService.countAllRequests(),
             // donationService.countAllDonations(),
             // donationService.totalDonationReceived(),
-            contactService.getLatestRequests(10),
+            contactService.getLatestRequests(7),
             settingService.getSettingByKey('live_darshan'),
             kathaService.getLatestKathas(10)
         ]);

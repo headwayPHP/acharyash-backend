@@ -49,10 +49,17 @@ const updateContactMessage = async (req, res) => {
 // GET /api/contact-us
 const getAllContactUs = async (req, res) => {
     try {
-        const contactMessages = await contactUsService.getAllContactUs();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const { contactMessages, total } = await contactUsService.getAllContactUs(page, limit);
+
         res.status(200).json({
             status: true,
             message: 'Contact messages fetched successfully',
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalMessages: total,
             data: contactMessages,
         });
     } catch (err) {
@@ -62,6 +69,7 @@ const getAllContactUs = async (req, res) => {
         });
     }
 };
+
 
 // GET /api/contact-us/:id
 const getContactUsById = async (req, res) => {

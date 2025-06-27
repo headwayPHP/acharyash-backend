@@ -1,14 +1,23 @@
 const Photo = require('../models/Photo');
 
 const createPhoto = async (data) => await Photo.create(data);
-const getAllPhotos = async () => await Photo.find().sort({ _id: -1 });
+const getAllPhotos = async (page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+    const photos = await Photo.find()
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);
+    const total = await Photo.countDocuments();
+    return { photos, total };
+};
+
 //TODO: content request and booking request sorting latest
 
 
 
 const getPaginatedPhotos = async (skip, limit) => {
-    return await Photo.find({status: 'active'})
-        .sort({createdAt: -1}) // Latest first
+    return await Photo.find({ status: 'active' })
+        .sort({ createdAt: -1 }) // Latest first
         .skip(skip)
         .limit(limit);
 };
@@ -31,11 +40,11 @@ const addMultiplePhotos = async (files, body) => {
 };
 
 const countActivePhotos = async () => {
-    return await Photo.countDocuments({status: 'active'});
+    return await Photo.countDocuments({ status: 'active' });
 };
 
 const getPhotoById = async (id) => await Photo.findById(id);
-const updatePhoto = async (id, data) => await Photo.findByIdAndUpdate(id, data, {new: true});
+const updatePhoto = async (id, data) => await Photo.findByIdAndUpdate(id, data, { new: true });
 const deletePhoto = async (id) => await Photo.findByIdAndDelete(id);
 
 module.exports = {

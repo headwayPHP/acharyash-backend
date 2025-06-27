@@ -11,7 +11,10 @@ exports.createBooking = async (req, res) => {
 
 exports.getAllBookings = async (req, res) => {
     try {
-        const bookings = await bookingService.getAllBookings();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const { bookings, total } = await bookingService.getAllBookings(page, limit);
 
         const formattedBookings = bookings.map(booking => {
             const [hour, minute] = booking.time.split(':');
@@ -21,16 +24,23 @@ exports.getAllBookings = async (req, res) => {
             const formattedTime = `${h.toString().padStart(2, '0')}:${minute} ${ampm}`;
 
             return {
-                ...booking._doc, // if you're using Mongoose, this ensures raw object
-                time: formattedTime
+                ...booking._doc,
+                time: formattedTime,
             };
         });
 
-        res.status(200).json({ status: true, data: formattedBookings });
+        res.status(200).json({
+            status: true,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalBookings: total,
+            data: formattedBookings,
+        });
     } catch (err) {
         res.status(500).json({ status: false, message: err.message });
     }
 };
+;
 
 
 exports.getBookingById = async (req, res) => {
